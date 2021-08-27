@@ -1,3 +1,4 @@
+from os import write
 import requests
 import markdown
 from bs4 import BeautifulSoup
@@ -14,14 +15,24 @@ headers = {
 response = requests.request("GET", url, headers=headers, data=payload)
 content = response.text
 
-soup = (BeautifulSoup(content, "html.parser").find_all('button', {"class":"action-launch-bio-modal", "data-bio-modal-subtitle":"Class of 2022"}))
-print(soup)
+soup = (BeautifulSoup(content, "html.parser").find_all('button', {"class":"action-launch-bio-modal"}))
+
+with open('output.csv', mode='w', encoding='utf-8') as o:
+    o.write("Name,")
+    o.write("Year,")
+    o.write("Bio\n")
+    for item in soup:
+        if "founded" in item["data-bio-modal-text"] or "founder" in item["data-bio-modal-text"]:
+            o.write("{0},".format(item["data-bio-modal-name"]))
+            o.write("{0},".format(item["data-bio-modal-subtitle"]))
+            o.write("{0}\n".format(item["data-bio-modal-text"]).replace(',',''))
 
 for item in soup:
-    output += '<img src="{0}" alt="{1}" width="200"/>\n'.format(item["data-bio-modal-image"], item["data-bio-modal-name"])
-    output += "# {0}\n".format(item["data-bio-modal-name"])
-    output += "## {0}\n".format(item["data-bio-modal-subtitle"])
-    output += "{0}\n\n\n".format(item["data-bio-modal-text"])
+    if "founded" in item["data-bio-modal-text"] or "founder" in item["data-bio-modal-text"]:
+        output += '<img src="{0}" alt="{1}" width="200"/>\n'.format(item["data-bio-modal-image"], item["data-bio-modal-name"])
+        output += "# {0}\n".format(item["data-bio-modal-name"])
+        output += "## {0}\n".format(item["data-bio-modal-subtitle"])
+        output += "{0}\n\n\n".format(item["data-bio-modal-text"])
 
 with open('output.md', mode='w', encoding='utf-8') as o:
     o.write(output)
